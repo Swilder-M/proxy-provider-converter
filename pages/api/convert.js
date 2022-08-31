@@ -4,6 +4,8 @@ const axios = require("axios");
 module.exports = async (req, res) => {
   const url = req.query.url;
   const target = req.query.target;
+  const exclude = req.query.exclude;
+  const include = req.query.include;
   console.log(`query: ${JSON.stringify(req.query)}`);
   if (url === undefined) {
     res.status(400).send("Missing parameter: url");
@@ -114,7 +116,23 @@ module.exports = async (req, res) => {
     const proxies = surgeProxies.filter((p) => p !== undefined);
     res.status(200).send(proxies.join("\n"));
   } else {
-    const response = YAML.stringify({ proxies: config.proxies });
+    // target === clash
+    const supportedProxies = config.proxies;
+    // filter by exclude
+    if (exclude) {
+      const excludeList = exclude.split(",");
+      supportedProxies = supportedProxies.filter(
+        (proxy) => !excludeList.includes(proxy.name)
+      );
+    }
+    // filter by include
+    if (include) {
+      const includeList = include.split(",");
+      supportedProxies = supportedProxies.filter((proxy) =>
+        includeList.includes(proxy.name)
+      );
+    }
+    const response = YAML.stringify({ proxies: supportedProxies });
     res.status(200).send(response);
   }
 };
