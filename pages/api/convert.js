@@ -117,20 +117,32 @@ module.exports = async (req, res) => {
     res.status(200).send(proxies.join("\n"));
   } else {
     // target === clash
-    const supportedProxies = config.proxies;
+    var supportedProxies = config.proxies;
+
     // filter by exclude
     if (exclude) {
       const excludeList = exclude.split(",");
-      supportedProxies = supportedProxies.filter(
-        (proxy) => !excludeList.includes(proxy.name)
-      );
+      supportedProxies = supportedProxies.filter((proxy) => {
+        for (let i = 0; i < excludeList.length; i++) {
+          if (proxy.name.includes(excludeList[i])) {
+            return false;
+          }
+        }
+        return true;
+      });
     }
+
     // filter by include
     if (include) {
       const includeList = include.split(",");
-      supportedProxies = supportedProxies.filter((proxy) =>
-        includeList.includes(proxy.name)
-      );
+      supportedProxies = supportedProxies.filter((proxy) => {
+        for (let i = 0; i < includeList.length; i++) {
+          if (proxy.name.includes(includeList[i])) {
+            return true;
+          }
+        }
+        return false;
+      });
     }
     const response = YAML.stringify({ proxies: supportedProxies });
     res.status(200).send(response);
